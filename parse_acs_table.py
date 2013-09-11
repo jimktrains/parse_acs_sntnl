@@ -207,7 +207,7 @@ with open(filename, 'r') as csvfile:
     for row in csvfile:
         cnt += 1
         # Faster if I'm just testing a specific section of the file
-        #if cnt not in range(1168,1280): continue
+        #if cnt not in range(3712,3737): continue
 
         if row['cells'] != '':
             # Process the last table seen
