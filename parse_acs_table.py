@@ -30,22 +30,22 @@ def longest_subsequence(seq):
 #   A:
 #   1
 #   2
-#   3
+#   Other A
 #   B
 #   C
 #   D:
 #   4
-#   5
+#   Other D
 # Which I want to become
 #   A:
 #     1
 #     2
-#     3
+#     Other A
 #   B
 #   C
 #   D:
 #     4
-#     5
+#     Other D
 def build_nonrep_hierarchy(seq):
     cur_prefix = None
     ret = []
@@ -143,7 +143,7 @@ with open(filename, 'r') as csvfile:
                     # I was thinking there might be a way to do it by
                     # Creating as balanced a tree as possible, but maybe 
                     # In the next version
-                    # Only errors on: B21001, B19215, B21001 so maybe it isn't so
+                    # Only errors on: B07201PR, B19215, B21001 so maybe it isn't so
                     # bad and can be handled by hand
                     print("Error on table %s, placing in flat rows" % stats[cur_table]['table'], file=sys.stderr)
                     stats[cur_table]['fields'] = table
