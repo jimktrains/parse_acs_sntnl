@@ -89,8 +89,11 @@ def build_nonrep_hierarchy(seq):
 def create_hierarchy(seq):
     # These are fields that appear to be part of the hierarchy, but aren't
     # well, they are, but they would be root and weren't useful when I started
-    # this
+    # this. HOWEVER, there are some sections that have values under the totals
+    # they seem to start 'Same house 1 year ago' (very exact, I know). We'll go
+    # from there. It seems to happen in about 10 tables
     invalid_prefix = re.compile(r"(^\s*Total\s*:)|(^\s*Universe.*:)")
+
     if seq is None or not len(seq): return None
     longest_sub = longest_subsequence([i['field'] for i in seq])
     if longest_sub is None or not len(longest_sub): return build_nonrep_hierarchy(seq)
