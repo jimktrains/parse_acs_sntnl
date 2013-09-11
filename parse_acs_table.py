@@ -190,6 +190,7 @@ filename = "Sequence_Number_and_Table_Number_Lookup.txt"
 
 
 cur_table = None
+cur_subj = None
 stats = {}
 table = []
 cnt = 0
@@ -243,18 +244,21 @@ with open(filename, 'r') as csvfile:
                     #     D
                     #     E
                     #
-                    print("Error on table %s, placing in flat rows" % stats[cur_table]['table'], file=sys.stderr)
+                    print("Error on table %s, placing in flat rows" % stats[cur_subj][cur_table]['table'], file=sys.stderr)
 
                     # Removes partially processed data
                     for i in table:
                         if 'fields' in i: del i['fields']
 
-                    stats[cur_table]['fields'] = table
+                    stats[cur_subj][cur_table]['fields'] = table
 
 
             # Initialize the new table
             cur_table = row['Long Table Title']
-            stats[cur_table]  = {
+            cur_subj = row['subject_area']
+            if cur_subj not in stats:
+                stats[cur_subj] = {}
+            stats[cur_subj][cur_table]  = {
                 'table': row['Table ID'],
                 'seq': row['seq'],
                 'fields': {}
@@ -271,7 +275,7 @@ with open(filename, 'r') as csvfile:
             })
 
 # Process the last table seen
-stats[cur_table]['fields'] = create_hierarchy(table)
+stats[cur_subj][cur_table]['fields'] = create_hierarchy(table)
 
 
 print(json.dumps(stats))
