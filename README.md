@@ -57,3 +57,6 @@ should be converted into a structure like:
                 Foreign born:
                     Naturalized U.S. citizen
                     Not a U.S. citizen
+
+
+NOTE: This is the tree for this table, but from table to table the tree can be drastically different
