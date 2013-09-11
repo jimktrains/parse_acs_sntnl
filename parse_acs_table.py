@@ -104,6 +104,12 @@ def build_nonrep_hierarchy(seq):
             cur_prefix = v
             tmp = []
         elif cur_prefix is not None:
+            if i in ['Abroad 1 year ago']:
+                cur_prefix['fields'] = tmp
+                ret.append(cur_prefix)
+                cur_prefix = None
+                tmp = []
+                ret.append(v)
             tmp.append(v)
             if i.find('Other') > -1:
                 cur_prefix['fields'] = tmp
@@ -209,6 +215,8 @@ with open(filename, 'r') as csvfile:
                 try:
                     stats[cur_subj][cur_table]['fields'] = create_hierarchy(table)
                 except IOError:#TypeError:
+                    # Update: It doesn't error, but groups fields wrong now:-\
+                    #
                     # It pains me to do this like this:-\
                     # B07201PR specifically, and that whole section in general
                     # Is just...not standard...
