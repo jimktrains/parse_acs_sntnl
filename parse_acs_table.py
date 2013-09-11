@@ -25,8 +25,50 @@ def longest_subsequence(seq):
     return longest_canidate
 
             
+# These are fields that appear to be part of the hierarchy, but aren't
+# well, they are, but they would be root and weren't useful when I started
+# this. HOWEVER, there are some sections that have values under the totals
+# they seem to start 'Same house 1 year ago' (very exact, I know). We'll go
+# from there. It seems to happen in about 10 tables
+invalid_prefix = re.compile(r"(^\s*Total\s*:)|(^\s*Universe.*:)")
+
+def is_prefix(i):
+    return i.find(":") > -1
             
-# Takes a sequence, and returns non repeating hiearchies.
+def is_valid_prefix(seq, k, longest_sub):
+    first_longest_sub = ['']
+    if longest_sub is not None and len(longest_sub):
+        first_longest_sub = longest_sub
+
+    has_colon = seq[k]['field'].find(':') > -1
+    invalid_match = invalid_prefix.match(seq[k]['field'])
+    invalid_in_sub = (seq[k]['field'] in first_longest_sub)
+
+
+
+    can_look_ahead = (k < (len(seq) - 1))
+
+    invalid_unless = can_look_ahead and \
+                    ( \
+                        ( \
+                            (seq[k+1]['field'].find(':') < 0) and \
+                            seq[k+1]['field'] != 'Afghan'
+                        ) or \
+                        (seq[k+1]['field']  == first_longest_sub[0]) \
+                    )
+    if invalid_match:
+        invalid_match = not invalid_unless
+
+    invalid = invalid_match or invalid_in_sub
+
+    #print("M", bool(invalid_match))
+    #print("S", invalid_in_sub)
+    #print("U", invalid_unless)
+    #print("I", invalid)
+
+    return has_colon and not invalid 
+
+# Takes a sequence, and returns non repeating hierarchies.
 # In the data there are e.g.:
 #   A:
 #   1
@@ -52,25 +94,32 @@ def build_nonrep_hierarchy(seq):
     ret = []
     tmp = []
 
-    for v in seq:
+    for k in range(len(seq)):
+        v = seq[k]
         i = v['field']
-        if i.find(':') > -1:
-            cur_prefix = i.replace(':', '').strip()
+        if is_prefix(i) and is_valid_prefix(seq, k, []):
+            if cur_prefix is not None:
+                cur_prefix['fields'] = tmp
+                ret.append(cur_prefix)
+            cur_prefix = v
+            tmp = []
         elif cur_prefix is not None:
             tmp.append(v)
             if i.find('Other') > -1:
-                ret.append({ cur_prefix: tmp })
+                cur_prefix['fields'] = tmp
+                ret.append(cur_prefix)
                 cur_prefix = None
                 tmp = []
         else:
             ret.append(v)
 
-    if len(tmp) > 0:
-       ret.append({ cur_prefix: tmp })
+    if cur_prefix is not None:
+        cur_prefix['fields'] = tmp
+        ret.append(cur_prefix)
     return ret
         
 
-# Creates hiearchies based upon repeated subsequences
+# Creates hierarchies based upon repeated subsequences
 # In there data there is
 #   A:
 #   B:
@@ -90,15 +139,11 @@ def build_nonrep_hierarchy(seq):
 #       C
 #       D
 def create_hierarchy(seq):
-    # These are fields that appear to be part of the hierarchy, but aren't
-    # well, they are, but they would be root and weren't useful when I started
-    # this. HOWEVER, there are some sections that have values under the totals
-    # they seem to start 'Same house 1 year ago' (very exact, I know). We'll go
-    # from there. It seems to happen in about 10 tables
-    invalid_prefix = re.compile(r"(^\s*Total\s*:)|(^\s*Universe.*:)")
 
     if seq is None or not len(seq): return None
+    #print("S",[i['field'] for i in seq])
     longest_sub = longest_subsequence([i['field'] for i in seq])
+    #print("L",longest_sub)
     if longest_sub is None or not len(longest_sub): return build_nonrep_hierarchy(seq)
     ret = []
 
@@ -106,15 +151,35 @@ def create_hierarchy(seq):
     last_header = None
     for k in range(len(seq)):
         i = seq[k]['field']
-        if invalid_prefix.match(i) and seq[k+1]['field'].find(':') > -1 and seq[k+1]['field'] == 'Same house 1 year ago':
-            ret.append(seq[k])
-        elif i == longest_sub[sub_i]:
-            ret[last_header]['fields'].append(seq[k])
-            sub_i = (sub_i + 1) % len(longest_sub)
+        #print("++++")
+        #print('k',k)
+        #print('i',i)
+        #print('s',sub_i)
+        #print('l',longest_sub[sub_i])
+        #print('h',last_header)
+        #print('r',ret)
+        #print(is_prefix(i))
+        #print(is_valid_prefix(seq, k, longest_sub))
+
+        if is_prefix(i):
+            if is_valid_prefix(seq, k, longest_sub):
+                last_header = len(ret)
+                ret.append(seq[k])
+                ret[last_header]['fields'] = []
+            else:
+                if last_header is None:
+                    ret.append(seq[k])
+                else:
+                    ret[last_header]['fields'].append(seq[k])
+                if i == longest_sub[sub_i]:
+                    sub_i = (sub_i + 1) % len(longest_sub)
         else:
-            last_header = len(ret)
-            ret.append(seq[k])
-            ret[last_header]['fields'] = []
+            if last_header is None:
+                ret.append(seq[k])
+            else:
+                ret[last_header]['fields'].append(seq[k])
+            if i == longest_sub[sub_i]:
+                sub_i = (sub_i + 1) % len(longest_sub)
     
     for i in ret:
         if 'fields' in i:
