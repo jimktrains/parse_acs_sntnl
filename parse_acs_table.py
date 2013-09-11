@@ -94,34 +94,37 @@ def build_nonrep_hierarchy(seq):
     ret = []
     tmp = []
 
+    def wrap_up_prefix():
+        nonlocal cur_prefix
+        nonlocal ret
+        nonlocal tmp
+        if cur_prefix is not None:
+            cur_prefix['fields'] = tmp
+            ret.append(cur_prefix)
+        cur_prefix = None
+        tmp = []
+        
     for k in range(len(seq)):
         v = seq[k]
         i = v['field']
         if is_prefix(i) and is_valid_prefix(seq, k, []):
-            if cur_prefix is not None:
-                cur_prefix['fields'] = tmp
-                ret.append(cur_prefix)
+            wrap_up_prefix()
             cur_prefix = v
-            tmp = []
         elif cur_prefix is not None:
+            # These come after the end of a list
+            # but the end isn't signafied otherwise
             if i in ['Abroad 1 year ago']:
-                cur_prefix['fields'] = tmp
-                ret.append(cur_prefix)
-                cur_prefix = None
-                tmp = []
+                wrap_up_prefix()
                 ret.append(v)
-            tmp.append(v)
-            if i.find('Other') > -1:
-                cur_prefix['fields'] = tmp
-                ret.append(cur_prefix)
-                cur_prefix = None
-                tmp = []
+            else:
+                tmp.append(v)
+                if i.find('Other') > -1:
+                    wrap_up_prefix()
         else:
             ret.append(v)
 
-    if cur_prefix is not None:
-        cur_prefix['fields'] = tmp
-        ret.append(cur_prefix)
+    wrap_up_prefix()
+
     return ret
         
 
@@ -155,6 +158,14 @@ def create_hierarchy(seq):
 
     sub_i = 0
     last_header = None
+    def add_row_into_appropriate_prefix(k):
+        nonlocal sub_i
+        if last_header is None:
+            ret.append(seq[k])
+        else:
+            ret[last_header]['fields'].append(seq[k])
+        if seq[k]['field'] == longest_sub[sub_i]:
+            sub_i = (sub_i + 1) % len(longest_sub)
     for k in range(len(seq)):
         i = seq[k]['field']
         #print("++++")
@@ -173,19 +184,9 @@ def create_hierarchy(seq):
                 ret.append(seq[k])
                 ret[last_header]['fields'] = []
             else:
-                if last_header is None:
-                    ret.append(seq[k])
-                else:
-                    ret[last_header]['fields'].append(seq[k])
-                if i == longest_sub[sub_i]:
-                    sub_i = (sub_i + 1) % len(longest_sub)
+                add_row_into_appropriate_prefix(k)
         else:
-            if last_header is None:
-                ret.append(seq[k])
-            else:
-                ret[last_header]['fields'].append(seq[k])
-            if i == longest_sub[sub_i]:
-                sub_i = (sub_i + 1) % len(longest_sub)
+            add_row_into_appropriate_prefix(k)
     
     for i in ret:
         if 'fields' in i:
