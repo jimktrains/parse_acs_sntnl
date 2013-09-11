@@ -55,15 +55,17 @@ def build_nonrep_hierarchy(seq):
         i = v['field']
         if i.find(':') > -1:
             cur_prefix = i.replace(':', '').strip()
-            tmp = []
         elif cur_prefix is not None:
             tmp.append(v)
             if i.find('Other') > -1:
                 ret.append({ cur_prefix: tmp })
                 cur_prefix = None
+                tmp = []
         else:
             ret.append(v)
 
+    if len(tmp) > 0:
+       ret.append({ cur_prefix: tmp })
     return ret
         
 
