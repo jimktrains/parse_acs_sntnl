@@ -148,6 +148,29 @@ with open(filename, 'r') as csvfile:
                     # In the next version
                     # Only errors on: B07201PR, B19215, B21001 so maybe it isn't so
                     # bad and can be handled by hand
+                    # These tables seem to have the format
+                    # A
+                    # B
+                    # D
+                    # C
+                    # E
+                    # A
+                    # B
+                    # D
+                    # C
+                    # E
+                    # which needs to be broken into
+                    # A
+                    #   B
+                    #     D
+                    #   C
+                    #     E
+                    # A
+                    #   B
+                    #     D
+                    #   C
+                    #     E
+                    #
                     print("Error on table %s, placing in flat rows" % stats[cur_table]['table'], file=sys.stderr)
                     stats[cur_table]['fields'] = table
 
