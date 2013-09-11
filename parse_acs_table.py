@@ -52,7 +52,7 @@ def is_valid_prefix(seq, k, longest_sub):
                     ( \
                         ( \
                             (seq[k+1]['field'].find(':') < 0) and \
-                            seq[k+1]['field'] != 'Afghan'
+                            seq[k+1]['field'] not in ['Afghan', 'Same house 1 year ago']
                         ) or \
                         (seq[k+1]['field']  == first_longest_sub[0]) \
                     )
