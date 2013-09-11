@@ -201,14 +201,14 @@ with open(filename, 'r') as csvfile:
     for row in csvfile:
         cnt += 1
         # Faster if I'm just testing a specific section of the file
-        #if cnt not in range(3712,3737): continue
+        #if cnt not in range(1168,1280): continue
 
         if row['cells'] != '':
             # Process the last table seen
             if(len(table)):
                 try:
-                    stats[cur_table]['fields'] = create_hierarchy(table)
-                except TypeError:
+                    stats[cur_subj][cur_table]['fields'] = create_hierarchy(table)
+                except IOError:#TypeError:
                     # It pains me to do this like this:-\
                     # B07201PR specifically, and that whole section in general
                     # Is just...not standard...
