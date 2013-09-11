@@ -8,12 +8,13 @@ import json
 # from 1 to ceil(len/2) is repeated
 # e.g.: 123456349 -> 34
 # e.g.: abcdefcdgdef -> def
+# NOTE: only subsequences length 2+ are considered
 def longest_subsequence(seq):
     canidate = None
     longest_canidate = []
 
     for start_pos in range(len(seq)):
-        for slice_size in range(1, int((len(seq)-start_pos)/2) + 1):
+        for slice_size in range(2, int((len(seq)-start_pos)/2) + 1):
             for start_i in range(start_pos, len(seq)-slice_size, slice_size):
                 canidate = seq[start_i : start_i + slice_size]
                 any_contains = False
