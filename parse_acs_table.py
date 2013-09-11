@@ -174,6 +174,11 @@ with open(filename, 'r') as csvfile:
                     #     E
                     #
                     print("Error on table %s, placing in flat rows" % stats[cur_table]['table'], file=sys.stderr)
+
+                    # Removes partially processed data
+                    for i in table:
+                        if 'fields' in i: del i['fields']
+
                     stats[cur_table]['fields'] = table
 
 
