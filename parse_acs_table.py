@@ -155,22 +155,26 @@ with open(filename, 'r') as csvfile:
                     # B
                     # D
                     # C
+                    # D
                     # E
                     # A
                     # B
                     # D
                     # C
+                    # D
                     # E
                     # which needs to be broken into
                     # A
                     #   B
                     #     D
                     #   C
+                    #     D
                     #     E
                     # A
                     #   B
                     #     D
                     #   C
+                    #     D
                     #     E
                     #
                     print("Error on table %s, placing in flat rows" % stats[cur_table]['table'], file=sys.stderr)
