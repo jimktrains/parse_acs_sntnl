@@ -1,3 +1,4 @@
+import sys
 import csv
 import re
 import json
@@ -86,6 +87,10 @@ def build_nonrep_hierarchy(seq):
 #       C
 #       D
 def create_hierarchy(seq):
+    # These are fields that appear to be part of the hierarchy, but aren't
+    # well, they are, but they would be root and weren't useful when I started
+    # this
+    invalid_prefix = re.compile(r"(^\s*Total\s*:)|(^\s*Universe.*:)")
     if seq is None or not len(seq): return None
     longest_sub = longest_subsequence([i['field'] for i in seq])
     if longest_sub is None or not len(longest_sub): return build_nonrep_hierarchy(seq)
@@ -95,15 +100,15 @@ def create_hierarchy(seq):
     last_header = None
     for k in range(len(seq)):
         i = seq[k]['field']
-        if invalid_prefix.match(i):
+        if invalid_prefix.match(i) and seq[k+1]['field'].find(':') > -1 and seq[k+1]['field'] == 'Same house 1 year ago':
             ret.append(seq[k])
         elif i == longest_sub[sub_i]:
-            seq[last_header]['fields'].append(seq[k])
+            ret[last_header]['fields'].append(seq[k])
             sub_i = (sub_i + 1) % len(longest_sub)
         else:
-            last_header = k
-            seq[k]['fields'] = []
+            last_header = len(ret)
             ret.append(seq[k])
+            ret[last_header]['fields'] = []
     
     for i in ret:
         if 'fields' in i:
@@ -112,10 +117,6 @@ def create_hierarchy(seq):
 
 filename = "Sequence_Number_and_Table_Number_Lookup.txt"
 
-# These are fields that appear to be part of the hierarchy, but aren't
-# well, they are, but they would be root and weren't useful when I started
-# this
-invalid_prefix = re.compile(r"(^\s*Total\s*:)|(^\s*Universe.*:)")
 
 cur_table = None
 stats = {}
@@ -128,16 +129,29 @@ with open(filename, 'r') as csvfile:
     for row in csvfile:
         cnt += 1
         # Faster if I'm just testing a specific section of the file
-        #if cnt not in range(200): continue
+        #if cnt not in range(3712,3737): continue
 
         if row['cells'] != '':
             # Process the last table seen
             if(len(table)):
-                stats[cur_table]['fields'] = create_hierarchy(table)
+                try:
+                    stats[cur_table]['fields'] = create_hierarchy(table)
+                except TypeError:
+                    # It pains me to do this like this:-\
+                    # B07201PR specifically, and that whole section in general
+                    # Is just...not standard...
+                    # I was thinking there might be a way to do it by
+                    # Creating as balanced a tree as possible, but maybe 
+                    # In the next version
+                    # Only errors on: B21001, B19215, B21001 so maybe it isn't so
+                    # bad and can be handled by hand
+                    print("Error on table %s, placing in flat rows" % stats[cur_table]['table'], file=sys.stderr)
+                    stats[cur_table]['fields'] = table
+
 
             # Initialize the new table
             cur_table = row['Long Table Title']
-            stats[row['Long Table Title']]  = {
+            stats[cur_table]  = {
                 'table': row['Table ID'],
                 'seq': row['seq'],
                 'fields': {}
