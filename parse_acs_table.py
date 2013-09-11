@@ -264,24 +264,25 @@ with open(filename, 'r') as csvfile:
 
 
             # Initialize the new table
-            cur_table = row['Long Table Title']
+            cur_table = row['Table ID'] 
             cur_subj = row['subject_area']
             if cur_subj not in stats:
                 stats[cur_subj] = {}
             stats[cur_subj][cur_table]  = {
-                'table': row['Table ID'],
+                'name': row['Long Table Title'],
                 'seq': row['seq'],
                 'fields': {}
             }
 
             table = []
         elif row['Line Number Decimal M Lines'] != '':
+            # Ignore non-data columns
+            if row['Line Number Decimal M Lines'].find('.5') > -1: continue
             # Remove the non-essential fields
             # and give the remaining ones better names
             table.append({
                 'field': row['Long Table Title'],
-                'id': row['Line Number Decimal M Lines']
-            
+                'id': ("%s%03d" % (row['Table ID'], int(row['Line Number Decimal M Lines'])))
             })
 
 # Process the last table seen
