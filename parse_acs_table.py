@@ -289,4 +289,110 @@ with open(filename, 'r') as csvfile:
 stats[cur_subj][cur_table]['fields'] = create_hierarchy(table)
 
 
-print(json.dumps(stats))
+#print(json.dumps(stats))
+
+
+bad_name = re.compile(r"[^A-Za-z0-9_]+")
+end_us = re.compile(r"_$")
+def shorten_id(name):
+    name = name.lower()
+    name = name.replace('year', 'yr')
+    name = name.replace('included', 'inc')
+    name = name.replace('includ', 'inc')
+    name = name.replace('status', 'stat')
+    name = name.replace('first', '1st')
+    name = name.replace('second', '2nd')
+    name = name.replace('third', '3rd')
+    name = name.replace('fourth', '4th')
+    name = name.replace('number', 'num')
+    name = name.replace('occupied', 'occ')
+    name = name.replace('_the_', '_')
+    name = name.replace('_in_', '_')
+    name = name.replace('_for_', '_')
+    name = name.replace('_of_', '_')
+    name = name.replace('month', 'mon')
+    name = name.replace('aggregate', 'agg')
+    name = name.replace('facility', 'fac')
+    name = name.replace('facilities', 'fac')
+    name = name.replace('geographical', 'geo')
+    name = name.replace('transportation', 'trans')
+    name = name.replace('people', 'ppl')
+    name = name.replace('living', 'liv')
+    name = name.replace('household', 'hh')
+    name = name.replace('population', 'pop')
+    name = name.replace('graduate', 'grad')
+    name = name.replace('professional', 'prof')
+    name = name.replace('_and_over', '_n_up')
+    name = name.replace('_and_under', '_n_un')
+    name = name.replace('_grade_', '_gr')
+    name = name.replace('poverty', 'pov')
+    name = name.replace('level', 'lvl')
+    name = name.replace('pov_lvl', 'povlvl')
+    name = name.replace('_past_', '_p')
+    name = name.replace('undergraduate', 'ugrad')
+    name = name.replace('female_', 'f_')
+    name = name.replace('male_', 'm_')
+    name = name.replace('_by_', '_')
+    name = name.replace('private', 'priv')
+    name = name.replace('public', 'pub')
+    name = name.replace('_or_more', '_plus')
+    name = name.replace('_at_', '_')
+    name = name.replace('adjusted', 'adj')
+    name = name.replace('inflation', 'infl')
+    name = name.replace('dollars', 'usd')
+    name = name.replace('educational', 'edu')
+    name = name.replace('attainment', 'att')
+    name = name.replace('employment', 'empl')
+    name = name.replace('enrolled', 'enroll')
+    name = name.replace('detail', 'dtl')
+    return name
+def fix_name(name):
+    name = name.replace(':', '')
+    name = bad_name.sub('_', name)
+    name = end_us.sub('', name)
+    name = shorten_id(name)
+    return name
+
+def make_field_list(table, prefix = None):
+    if 'fields' in table:
+        fields = []
+        if prefix is None:
+            if 'field' in table:
+                prefix = table['field']
+        else:
+            prefix = prefix  + '.'  + table['field']
+        if prefix is not None:
+            prefix = fix_name(prefix)
+
+        if table['fields'] is None:
+            return []
+
+        for field in table['fields']:
+            fields += make_field_list(field, prefix)
+        return fields
+    else:
+        field = table['id']
+        if prefix is None:
+            prefix = table['field']
+        else:
+            prefix = prefix  + '.'  + table['field']
+        prefix = fix_name(prefix)
+        return [ ( field, prefix ) ] 
+
+
+for col in stats:
+    for table in stats[col]:
+        name = fix_name(stats[col][table]['name'])
+        print("DROP VIEW %s;" % name)
+        print("CREATE VIEW acs2011_5yr.%s AS SELECT stusab, logrecno," % name)
+        for i in make_field_list(stats[col][table]):
+            print("%s AS %s," % i )
+        print("1 AS one FROM acs2011_5yr.%s;" % table)
+        print("COMMENT ON VIEW acs2011_5yr.%s IS 'From %s';" % (name, table))
+        
+        print("CREATE VIEW acs2011_5yr.moe_%s AS SELECT stusab, logrecno," % name)
+        for i in make_field_list(stats[col][table]):
+            print("%s AS %s," % i )
+            print("%s_moe AS moe_%s," % i )
+        print("1 AS one FROM acs2011_5yr.%s_moe;" % table)
+        print("COMMENT ON VIEW acs2011_5yr.%s_moe IS 'From %s_moe';" % (name, table))
