@@ -401,6 +401,8 @@ def fix_name(name):
     name = bad_name.sub('_', name)
     name = end_us.sub('', name)
     name = shorten_id(name)
+    if re.match("^\d.+", name):
+        name = "X" + name
     return name
 
 def make_field_list(table, prefix = None):
