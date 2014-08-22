@@ -434,17 +434,31 @@ def make_field_list(table, prefix = None):
 
 for col in stats:
     for table in stats[col]:
+        schema = "acs2012_5yr"
         name = fix_name(stats[col][table]['name'])
-        print("DROP VIEW %s;" % name)
-        print("CREATE VIEW acs2011_5yr.%s AS SELECT stusab, logrecno," % name)
+        print("CREATE OR REPLACE VIEW %s.%s AS " % (schema, name))
+        print(" SELECT stusab, logrecno, ")
+        print("        state as statefp, county as countyfp, cousub as cousubfp, tract as tractce, blkgrp as blkgrpce, ")
+        print("        concat(state, county) as county_geoid, ")
+        print("        concat(state, county, cousub) as cousub_geoid, ")
+        print("        concat(state, county, tract) as tract_geoid, ")
+        print("        concat(state, county, tract, blkgrp) as blkgrp_geoid, ")
         for i in make_field_list(stats[col][table]):
-            print("%s AS %s," % i )
-        print("1 AS one FROM acs2011_5yr.%s;" % table)
-        print("COMMENT ON VIEW acs2011_5yr.%s IS 'From %s';" % (name, table))
+            print("        %s AS %s," % i )
+        print("        1 AS one ")
+        print(" FROM %s.%s INNER JOIN %s.geoheader USING (geoid);" % (schema, table, schema))
+        print("COMMENT ON VIEW %s.%s IS 'From %s';" % (schema, name, table))
         
-        print("CREATE VIEW acs2011_5yr.moe_%s AS SELECT stusab, logrecno," % name)
+        print("CREATE OR REPLACE VIEW %s.%s_moe AS " % (schema, name))
+        print(" SELECT stusab, logrecno, ")
+        print("        state as statefp, county as countyfp, cousub as cousubfp, tract as tractce, blkgrp as blkgrpce, ")
+        print("        concat(state, county) as county_geoid, ")
+        print("        concat(state, county, cousub) as cousub_geoid, ")
+        print("        concat(state, county, tract) as tract_geoid, ")
+        print("        concat(state, county, tract, blkgrp) as blkgrp_geoid, ")
         for i in make_field_list(stats[col][table]):
-            print("%s AS %s," % i )
-            print("%s_moe AS moe_%s," % i )
-        print("1 AS one FROM acs2011_5yr.%s_moe;" % table)
-        print("COMMENT ON VIEW acs2011_5yr.%s_moe IS 'From %s_moe';" % (name, table))
+            print("        %s AS %s," % i )
+            print("        %s_moe AS moe_%s," % i )
+        print("        1 AS one ")
+        print(" FROM %s.%s_moe INNER JOIN %s.geoheader USING (geoid);" % (schema, table,schema))
+        print("COMMENT ON VIEW %s.%s_moe IS 'From %s_moe';" % (schema, name, table))
